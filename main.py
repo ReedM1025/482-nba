@@ -3,14 +3,6 @@ from nba_api.stats.static import players
 from typing import List, Dict
 import pandas as pd
 
-#=========================
-#   Global Vars
-#=========================
-
-
-
-
-
 #Function to Display the main Menu
 def display_menu():
     """This Function prints out the Menu for the teminal control of the program. Returns the str of the selection"""
@@ -49,7 +41,7 @@ def display_roster(user_roster, isComplete = False):
 
     #Iterate over the user's Roster
     for player in user_roster:
-        print(f"{player["position_num"]}) Position: {player["position"]} -- Name: {player["name"]}")
+        print(f"{player['position_num']}) -- Name: {player['name']}")
         
     print("==="*10)
 
@@ -73,28 +65,23 @@ def get_player_list():
         
     #Reset user's Roster
     user_roster = [
-    {   #1 - Guard
-        "position": "G", 
+    {   #1
         "position_num": "1",
         "name": "X"
     }, 
-    {   #2 - Shooting Guard
-        "position": "SG", 
+    {   #2
         "position_num": "2",
         "name": "X"
     }, 
-    {   #3 - Small Forward
-        "position": "SF", 
+    {   #3, 
         "position_num": "3",
         "name": "X"
     }, 
-    {   #4 - Power Forward
-        "position": "PF", 
+    {   #4 
         "position_num": "4",
         "name": "X"
     }, 
-    {   #5 - Center
-        "position": "C", 
+    {   #5 
         "position_num": "5",
         "name": "X"
     }
@@ -141,28 +128,23 @@ def roster_load(user_roster):
 
     #Reset User Roster
     user_roster = [
-    {   #1 - Guard
-        "position": "G", 
+    {   #1
         "position_num": "1",
         "name": "X"
     }, 
-    {   #2 - Shooting Guard
-        "position": "SG", 
+    {   #2 
         "position_num": "2",
         "name": "X"
     }, 
-    {   #3 - Small Forward
-        "position": "SF", 
+    {   #3
         "position_num": "3",
         "name": "X"
     }, 
-    {   #4 - Power Forward
-        "position": "PF", 
+    {   #4
         "position_num": "4",
         "name": "X"
     }, 
-    {   #5 - Center
-        "position": "C", 
+    {   #5 
         "position_num": "5",
         "name": "X"
     }
