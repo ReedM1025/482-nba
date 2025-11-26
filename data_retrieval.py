@@ -92,7 +92,7 @@ def build_feature_row(season: str, team_row: pd.Series, starters_df: pd.DataFram
 
 
 # Main Function Build the Dataset and save to the CSV provided
-def build_dataset(output_csv: str, year_start: int, year_end: int):
+def build_dataset(filename: str, year_start: int, year_end: int, players_per_roster: int):
     """
     Build the full dataset for multiple seasons and save to CSV.
     """
@@ -128,8 +128,8 @@ def build_dataset(output_csv: str, year_start: int, year_end: int):
                 print(f"No player stats for {team_name} in {season}, skipping row")
                 continue
 
-            #Choose "starting 5" as top 5 by minutes per game
-            starters = team_players.sort_values("MIN", ascending=False).head(5)
+            #Select the top X amount of players per roster to be included
+            starters = team_players.sort_values("MIN", ascending=False).head(players_per_roster)
 
             #Call to helper and append
             feature_row = build_feature_row(season, team_row, starters)
@@ -137,9 +137,9 @@ def build_dataset(output_csv: str, year_start: int, year_end: int):
 
     #Convert to DataFrame and save
     out_df = pd.DataFrame(all_rows)
-    out_df.to_csv(output_csv, index=False)
-    print(f"\nSaved {len(out_df)} rows to {output_csv}")
+    out_df.to_csv(filename, index=False)
+    print(f"\nSaved {len(out_df)} rows to {filename}")
 
 
 if __name__ == "__main__":
-    build_dataset("data.csv", 2001, 2025)
+    build_dataset(filename="data.csv", year_start=2001, year_end=2025, players_per_roster=5)
