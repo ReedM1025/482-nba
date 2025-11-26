@@ -1,53 +1,60 @@
 import time
 import pandas as pd
-
 from nba_api.stats.endpoints import leaguedashteamstats, leaguedashplayerstats
 
 
+#Function that Fetches all data for a given season
 def get_team_season_stats(season: str, timeout: int = 60) -> pd.DataFrame:
-    print(f"  Fetching team stats for {season}...")
+    print(f"Fetching team stats for {season}")
+    
+    #Retrive stats
     stats = leaguedashteamstats.LeagueDashTeamStats(
         season=season,
-        per_mode_detailed="PerGame",           # keep this
-        season_type_all_star="Regular Season", # keep this
+        per_mode_detailed="PerGame",           
+        season_type_all_star="Regular Season", 
         timeout=timeout,
     )
+
+    #Create a Dataframe
     df = stats.get_data_frames()[0]
-    # For sanity, you can inspect columns once:
-    # print(df.columns)
+
+    #Return the dataframe
     return df
 
 
+#Function for getting an individual player's stats
 def get_player_season_stats(season: str, timeout: int = 60) -> pd.DataFrame:
-    print(f"  Fetching player stats for {season}...")
+    print(f"Fetching player stats for {season}")
+
+    #Retrive stats
     stats = leaguedashplayerstats.LeagueDashPlayerStats(
         season=season,
-        per_mode_detailed="PerGame",           # keep
-        season_type_all_star="Regular Season", # keep
+        per_mode_detailed="PerGame",   
+        season_type_all_star="Regular Season", 
         timeout=timeout,
     )
+
+    #Create Data frame
     df = stats.get_data_frames()[0]
-    # print(df.columns)
+    
+    #Return data frame
     return df
 
+#Helper Function to build a row of the CSV
+def build_feature_row(season: str, team_row: pd.Series, starters_df: pd.DataFrame) -> dict:
 
-def build_feature_row(season: str,
-                      team_row: pd.Series,
-                      starters_df: pd.DataFrame) -> dict:
-    """
-    Build a single row for the output dataset:
-    TeamName, Season, Wins, and 5 players' stats.
-    """
+    #Extract team name and wins
     team_name = team_row["TEAM_NAME"]
     wins = team_row["W"]
 
+    #initailize row
     row = {
         "TeamName": team_name,
         "Season": season,
         "Wins": wins,
     }
 
-    # Stats we care about per player
+    #stats we care about per player
     stat_cols = {
         "GP": "GP",
         "MIN": "MIN",
@@ -80,53 +87,59 @@ def build_feature_row(season: str,
         if i == 5:
             break
 
+    #Return the row
     return row
 
 
-def build_dataset(output_csv: str):
+# Main Function Build the Dataset and save to the CSV provided
+def build_dataset(output_csv: str, year_start: int, year_end: int):
     """
     Build the full dataset for multiple seasons and save to CSV.
     """
 
-    # Last ~11 seasons, adjust if you want more/less
-    seasons = [f"{year}-{str(year + 1)[-2:]}" for year in range(2013, 2024)]
+    #Initialize list of seasons based on provided years
+    seasons = [f"{year}-{str(year + 1)[-2:]}" for year in range(year_start, year_end)]
 
     all_rows = []
 
+    #Iterate over each season
     for season in seasons:
-        print(f"\nProcessing season {season}...")
+        print(f"\nProcessing season: {season}")
 
         # 1) Team stats for this season (includes wins)
         team_df = get_team_season_stats(season)
-        time.sleep(1.0)  # gentle on the API
+        time.sleep(1.0)  #Rate Limiting Avoidence
 
         # 2) Player stats for this season
         player_df = get_player_season_stats(season)
-        time.sleep(1.0)  # gentle on the API
+        time.sleep(1.0)  #Rate Limiting Avoidence
 
-        # For each team in this season
+        #iterate over each team in this season
         for _, team_row in team_df.iterrows():
+            #Extract team name and ID
             team_id = team_row["TEAM_ID"]
             team_name = team_row["TEAM_NAME"]
 
-            # Filter to players on this team
+            #Filter to players on this team
             team_players = player_df[player_df["TEAM_ID"] == team_id]
 
+            #Edge case for empty data
             if team_players.empty:
-                print(f"  [WARN] No player stats for {team_name} in {season}, skipping.")
+                print(f"No player stats for {team_name} in {season}, skipping row")
                 continue
 
-            # Choose "starting 5" as top 5 by minutes per game
+            #Choose "starting 5" as top 5 by minutes per game
             starters = team_players.sort_values("MIN", ascending=False).head(5)
 
+            #Call to helper and append
             feature_row = build_feature_row(season, team_row, starters)
             all_rows.append(feature_row)
 
-    # Convert to DataFrame and save
+    #Convert to DataFrame and save
     out_df = pd.DataFrame(all_rows)
     out_df.to_csv(output_csv, index=False)
     print(f"\nSaved {len(out_df)} rows to {output_csv}")
 
 
 if __name__ == "__main__":
-    build_dataset("data.csv")
+    build_dataset("data.csv", 2001, 2025)
