@@ -2,6 +2,8 @@ from nba_api.stats.endpoints import playercareerstats
 from nba_api.stats.static import players
 from typing import List, Dict
 import pandas as pd
+from model import load_model, FEATURE_STATS, compute_team_features
+
 
 #Function to Display the main Menu
 def display_menu():
@@ -220,6 +222,44 @@ def print_roster_stats_table(user_roster):
     df = pd.DataFrame(rows)
     print(df.to_string(index=False))
 
+def predict_custom_roster_wins(user_roster):
+    #Load model, feature columns, and calibration params
+    model, feature_cols, alpha, beta = load_model()
+
+    print("\nPredicting win total based on last-season stats:\n")
+
+    row = {}
+
+    #Build player stats from the user's roster
+    for i, player in enumerate(user_roster, start=1):
+        if i > 5:
+            break
+
+        stats = get_last_season_stats(player["id"])
+
+        for stat in FEATURE_STATS:
+            col_name = f"P{i}_{stat}"
+            value = float(stats[stat])
+
+            row[col_name] = value
+
+    df = pd.DataFrame([row])
+
+    df = compute_team_features(df)
+
+    X_custom = df.reindex(columns=feature_cols, fill_value=0.0)
+
+    raw_pred = model.predict(X_custom)[0]
+
+    #Model calibration to keep predictions reasonable
+    calibrated = alpha + beta * raw_pred
+
+    #Force win totals to 0-82 range so that we don't have impossible predictions
+    wins = max(0.0, min(82.0, calibrated))
+
+    return print(f"Predicted Wins: {wins:.1f} out of 82\n")
+
+
 
 def main():
     """Main Entry point of the program"""
@@ -255,7 +295,10 @@ def main():
 
         #OPTION D - Predict Win Total
         elif user_input == "d":
-            pass
+            if not user_roster:
+                print("\nNo roster selected. Please create one first\n")
+            else:
+                predict_custom_roster_wins(user_roster)
 
         #EXIT
         elif user_input == "q":
