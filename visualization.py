@@ -103,7 +103,7 @@ def visualize_roster_comparison(roster1_name: str, roster1_wins: float,
     ax1.axhline(y=50, color='green', linestyle='--', alpha=0.5, linewidth=1, label='Playoff Threshold (~50 wins)')
     
     ax1.set_ylabel('Predicted Wins (out of 82)', fontsize=12, fontweight='bold')
-    ax1.set_title('Predicted Season Win Totals', fontsize=16, fontweight='bold', pad=20)
+    ax1.set_title('Predicted Season Win Totals', fontsize=16, fontweight='bold', pad=5) #THIS ONE
     ax1.set_ylim(0, max(82, max(wins) * 1.2))
     ax1.grid(axis='y', alpha=0.3, linestyle='-', linewidth=0.5)
     ax1.legend(loc='upper right', fontsize=10)
@@ -170,7 +170,7 @@ def visualize_roster_comparison(roster1_name: str, roster1_wins: float,
     
     # Add overall title
     fig.suptitle('NBA Roster Comparison Analysis', 
-                 fontsize=18, fontweight='bold', y=0.98)
+                 fontsize=18, fontweight='bold', y=0.98)    #THIS ONE
     
     # Save figure
     plt.savefig(save_path, dpi=300, bbox_inches='tight', facecolor='white')
@@ -178,6 +178,9 @@ def visualize_roster_comparison(roster1_name: str, roster1_wins: float,
     
     # Display
     plt.show()
+
+    # fig.savefig("figure.png")
+    # plt.savefig("plot.png")
     
     return fig
 

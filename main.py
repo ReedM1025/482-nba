@@ -366,7 +366,8 @@ def main():
             
             wins1, model1, feature_cols1, X1 = predict_custom_roster_wins(roster1, return_details=True)
             wins2, model2, feature_cols2, X2 = predict_custom_roster_wins(roster2, return_details=True)
-            
+
+            strengths1 = get_top_strengths(model1, feature_cols1, X1, top_n=3)
             strengths2 = get_top_strengths(model2, feature_cols2, X2, top_n=3)
             
             print(f"\n{'='*50}")
