@@ -2,7 +2,8 @@ from nba_api.stats.endpoints import playercareerstats
 from nba_api.stats.static import players
 from typing import List, Dict
 import pandas as pd
-from model import load_model, FEATURE_STATS, compute_team_features
+from model import load_model, FEATURE_STATS, SHOOTING_STATS, compute_team_features
+from visualization import visualize_roster_comparison, get_top_strengths
 
 
 #Function to Display the main Menu
@@ -24,6 +25,7 @@ def display_menu():
     print("B) - Load in Custom NBA Roster\n")
     print("C) - Display Roster Stats\n")
     print("D) - Predict Custom NBA Roster\n")
+    print("E) - Compare Two Rosters (Visualization)\n")
     print("Q) - Exit\n")
     print("==="*10)
 
@@ -222,7 +224,10 @@ def print_roster_stats_table(user_roster):
     df = pd.DataFrame(rows)
     print(df.to_string(index=False))
 
-def predict_custom_roster_wins(user_roster):
+def predict_custom_roster_wins(user_roster, return_details=False):
+    """
+    Predict wins for a custom roster.
+    """
     #Load model, feature columns, and calibration params
     model, feature_cols, alpha, beta = load_model()
 
@@ -257,7 +262,10 @@ def predict_custom_roster_wins(user_roster):
     #Force win totals to 0-82 range so that we don't have impossible predictions
     wins = max(0.0, min(82.0, calibrated))
 
-    return print(f"Predicted Wins: {wins:.1f} out of 82\n")
+    if return_details:
+        return wins, model, feature_cols, X_custom
+    else:
+        return print(f"Predicted Wins: {wins:.1f} out of 82\n")
 
 
 
@@ -300,6 +308,87 @@ def main():
             else:
                 predict_custom_roster_wins(user_roster)
 
+        #OPTION E - visualize two Rosters
+        elif user_input == "e":
+            print("\n" + "="*50)
+            print("Compare Two Rosters")
+            print("="*50)
+            print("\nYou'll need to load two rosters from files.")
+            print("Enter the filenames for the two rosters to compare.\n")
+            
+            filename1 = str(input("Enter filename for Roster 1 (e.g., roster.txt): ")).strip()
+            roster1 = []
+            try:
+                with open(filename1, "r") as f:
+                    from nba_api.stats.static import players
+                    roster1 = [
+                        {"position_num": str(i+1), "name": "X", "id": None}
+                        for i in range(5)
+                    ]
+                    for i, line in enumerate(f):
+                        player_name = line.strip().lower()
+                        name_matches = players.find_players_by_full_name(player_name)
+                        if name_matches:
+                            roster1[i]["name"] = name_matches[0]["full_name"]
+                            roster1[i]["id"] = name_matches[0]["id"]
+            except Exception as e:
+                print(f"Error loading {filename1}: {e}")
+                continue
+            
+            filename2 = str(input("Enter filename for Roster 2 (e.g., roster2.txt): ")).strip()
+            roster2 = []
+            try:
+                with open(filename2, "r") as f:
+                    roster2 = [
+                        {"position_num": str(i+1), "name": "X", "id": None}
+                        for i in range(5)
+                    ]
+                    for i, line in enumerate(f):
+                        player_name = line.strip().lower()
+                        name_matches = players.find_players_by_full_name(player_name)
+                        if name_matches:
+                            roster2[i]["name"] = name_matches[0]["full_name"]
+                            roster2[i]["id"] = name_matches[0]["id"]
+            except Exception as e:
+                print(f"Error loading {filename2}: {e}")
+                continue
+            
+            # Get roster names
+            roster1_name = input("Enter a name for Roster 1 (or press Enter for filename): ").strip()
+            if not roster1_name:
+                roster1_name = filename1.replace(".txt", "").title()
+            
+            roster2_name = input("Enter a name for Roster 2 (or press Enter for filename): ").strip()
+            if not roster2_name:
+                roster2_name = filename2.replace(".txt", "").title()
+            
+            print("\nCalculating predictions and generating visualization...")
+            
+            wins1, model1, feature_cols1, X1 = predict_custom_roster_wins(roster1, return_details=True)
+            wins2, model2, feature_cols2, X2 = predict_custom_roster_wins(roster2, return_details=True)
+            
+            strengths2 = get_top_strengths(model2, feature_cols2, X2, top_n=3)
+            
+            print(f"\n{'='*50}")
+            print("COMPARISON SUMMARY")
+            print(f"{'='*50}")
+            print(f"\n{roster1_name}: {wins1:.1f} predicted wins")
+            print(f"{roster2_name}: {wins2:.1f} predicted wins")
+            print(f"\nDifference: {abs(wins1 - wins2):.1f} wins")
+            
+            # actual visualization
+            try:
+                visualize_roster_comparison(
+                    roster1_name=roster1_name,
+                    roster1_wins=wins1,
+                    roster1_strengths=strengths1,
+                    roster2_name=roster2_name,
+                    roster2_wins=wins2,
+                    roster2_strengths=strengths2,
+                    save_path="roster_comparison.png"
+                )
+            except Exception as e:
+                print(f"\nError generating visualization: {e}")
         #EXIT
         elif user_input == "q":
             flag = False    #Set flag to false to exit loop

@@ -64,6 +64,13 @@ def build_feature_row(season: str, team_row: pd.Series, starters_df: pd.DataFram
         "STL": "STL",
         "BLK": "BLK",
         "TOV": "TOV",
+        # Advanced shooting stats for efficiency metrics
+        "FGM": "FGM",
+        "FGA": "FGA",
+        "FG3M": "FG3M",
+        "FG3A": "FG3A",
+        "FTM": "FTM",
+        "FTA": "FTA",
     }
 
     # Ensure we always have exactly 5 slots: if fewer than 5 players, pad with NaN
