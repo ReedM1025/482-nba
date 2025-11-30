@@ -165,6 +165,10 @@ def roster_load(user_roster):
                 #Get Player Info   
                 name_matches = players.find_players_by_full_name(player_name)
 
+                if name_matches == []:
+                    print(f"Error - player: {player_name} not found")
+                    break
+
                 #Extract ID
                 user_roster[i]["name"] = name_matches[0]["full_name"]
 
@@ -172,10 +176,11 @@ def roster_load(user_roster):
                 user_roster[i]["id"] = name_matches[0]["id"]
 
             #Return the Roster
+            # print(user_roster)  #TESTING
             return user_roster
 
-    except:
-        print("ERROR - File Read Error")
+    except Exception as e:
+        print(f"ERROR - File Read Error: {e}")
 
 #Function to get a players most recent stat line
 def get_last_season_stats(player_id):
